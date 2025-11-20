@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Tutor - Learning Environment</title>
+    
+    <!-- TailwindCSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-gray-900 overflow-hidden">
+    <div class="h-screen flex flex-col md:flex-row">
+        
+        <!-- LEFT COLUMN: AI Tutor Chat Panel -->
+        <div class="w-full md:w-2/5 flex flex-col bg-gradient-to-b from-purple-900 via-purple-800 to-indigo-900">
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-5 shadow-lg">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">✨</span>
+                    <h1 class="text-2xl font-bold">AI Tutor</h1>
+                </div>
+                <p class="text-sm text-purple-100 mt-1">Learning through conversation</p>
+            </div>
+            
+            <!-- Chat Messages Container with Code Background -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-5 space-y-4 relative">
+                <!-- Animated Computer Screen Background -->
+                <div class="computer-animation">
+                    <div class="computer-frame">
+                        <div class="computer-screen">
+                            <div class="screen-content">
+                                <div class="code-line typing-animation" style="--delay: 0s">
+                                    <span class="code-keyword">def</span> <span class="code-function">learn_python</span><span class="code-paren">():</span>
+                                </div>
+                                <div class="code-line typing-animation" style="--delay: 0.5s">
+                                    <span class="code-indent">    </span><span class="code-keyword">while</span> <span class="code-value">True</span><span class="code-paren">:</span>
+                                </div>
+                                <div class="code-line typing-animation" style="--delay: 1s">
+                                    <span class="code-indent">        </span><span class="code-variable">skills</span><span class="code-operator">.</span><span class="code-function">push</span><span class="code-paren">(</span><span class="code-string">'new skill'</span><span class="code-paren">)</span>
+                                </div>
+                                <div class="code-line typing-animation" style="--delay: 1.5s">
+                                    <span class="code-indent">    </span><span class="code-function">learnCode</span><span class="code-paren">()</span>
+                                </div>
+                                <div class="code-line typing-animation" style="--delay: 2s">
+                                    <span class="code-cursor">|</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="computer-base"></div>
+                    </div>
+                </div>
+                
+                <!-- Welcome message -->
+                <div class="flex justify-start relative z-10">
+                    <div class="chat-bubble">
+                        <p class="chat-text">
+                            Welcome! I'm your AI tutor. Let's start learning together. What would you like to explore today?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Input Area -->
+            <div class="border-t border-purple-700 bg-purple-900 bg-opacity-50 p-4">
+                <div class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        placeholder="Ask a question or respond to the tutor..." 
+                        class="flex-1 px-4 py-3 bg-white bg-opacity-10 border border-purple-500 border-opacity-30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                        autocomplete="off"
+                    >
+                    <button 
+                        id="sendButton" 
+                        class="px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 transition-colors font-medium flex items-center justify-center"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RIGHT COLUMN: Code Sandbox -->
+        <div class="w-full md:w-3/5 flex flex-col bg-gray-900">
+            <!-- Editor Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-teal-600 text-white p-4 shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">&lt;/&gt;</span>
+                        <div>
+                            <h2 class="text-xl font-bold">Code Sandbox</h2>
+                            <p class="text-xs text-blue-100">Practice what you learn</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button 
+                            id="resetButton" 
+                            class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-sm font-medium flex items-center gap-2"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Reset
+                        </button>
+                        <button 
+                            id="runButton" 
+                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors text-sm font-semibold flex items-center gap-2"
+                        >
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"></path>
+                            </svg>
+                            Run Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Editor Section -->
+            <div class="flex-1 flex flex-col border-b border-gray-700">
+                <div class="bg-gray-800 px-4 py-2 border-b border-gray-700">
+                    <div class="flex items-center gap-2 text-gray-300 text-sm">
+                        <span>&lt;/&gt;</span>
+                        <span>Editor</span>
+                    </div>
+                </div>
+                <div id="editorContainer" class="flex-1"></div>
+            </div>
+            
+            <!-- Terminal Section -->
+            <div class="bg-gray-900 flex flex-col" style="height: 200px;">
+                <div class="bg-gray-800 px-4 py-2 border-t border-gray-700">
+                    <div class="flex items-center gap-2 text-gray-300 text-sm">
+                        <span>&gt;_</span>
+                        <span>Terminal</span>
+                    </div>
+                </div>
+                <div id="consoleOutput" class="flex-1 overflow-y-auto p-4 font-mono text-sm text-green-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-green-500">~</span>
+                        <span>Waiting for code execution...</span>
+                        <span class="blink-cursor">|</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

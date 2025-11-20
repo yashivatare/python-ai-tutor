@@ -1,0 +1,18 @@
+# Ignore the virtual environment
+venv/
+.venv/
+env/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore system files
+.DS_Store
+
+# Ignore specific IDE settings (optional)
+.vscode/
+.idea/
+
+# Ignore the ChromaDB database folder (it's auto-generated)
+chroma_db/
