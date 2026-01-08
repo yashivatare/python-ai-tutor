@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import subprocess
 import sys
-import os  
+import os
 
 
 from langchain_community.chat_models import ChatOllama
@@ -20,16 +20,12 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 
-
-
-
-
 app = FastAPI()
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,63 +41,64 @@ embeddings = OllamaEmbeddings(model="phi3")
 
 vectorstore = None
 
+
 class CodeInput(BaseModel):
     source_code: str
+
 
 class QuestionInput(BaseModel):
     question: str
 
+
 @app.on_event("startup")
 def load_and_build_database():
     global vectorstore
-    
+
     print("--- Server is starting up... ---")
     print("--- Loading knowledge base with 'Smart' Markdown Splitter... ---")
-    
+
     knowledge_base_dir = "knowledge_base"
-    
+
     headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
         ("###", "Header 3"),
     ]
 
-    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-    
-    all_split_docs = [] 
+    markdown_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=headers_to_split_on)
+
+    all_split_docs = []
     for filename in os.listdir(knowledge_base_dir):
         if filename.endswith(".md"):
             file_path = os.path.join(knowledge_base_dir, filename)
-            
+
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     file_content = f.read()
             except Exception as e:
                 print(f"--- FAILED to read {filename}: {e} ---")
                 continue
-            
+
             new_docs = markdown_splitter.split_text(file_content)
-            
-            
+
             for doc in new_docs:
                 doc.metadata["source"] = filename
-            
-            
+
             all_split_docs.extend(new_docs)
 
     if not all_split_docs:
         print("!!! No documents found in 'knowledge_base'. AI Tutor may not work. !!!")
         return
 
-    
-    print(f"--- Building 'magic bookshelf' with {len(all_split_docs)} new 'smart' pages... ---")
+    print(
+        f"--- Building 'magic bookshelf' with {len(all_split_docs)} new 'smart' pages... ---")
     vectorstore = Chroma.from_documents(
-        documents=all_split_docs, 
+        documents=all_split_docs,
         embedding=embeddings
     )
     print("--- 'Magic bookshelf' is ready. ---")
     print("--- Server is ready to accept requests. ---")
-
 
 
 @app.get("/")
@@ -112,9 +109,9 @@ def read_root():
 
 @app.post("/run_code")
 def run_code(code_input: CodeInput):
-    
+
     code = code_input.source_code
-    
+
     try:
         result = subprocess.run(
             [sys.executable, '-c', code],
@@ -130,20 +127,18 @@ def run_code(code_input: CodeInput):
         }
 
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
-        
-        
+
         error_message = ""
         status = ""
         if isinstance(e, subprocess.TimeoutExpired):
             status = "Time Limit Exceeded"
             error_message = "Your code took more than 5 seconds to run and was stopped."
-        else: 
+        else:
             status = "Runtime Error"
-            error_message = e.stderr 
-        
+            error_message = e.stderr
+
         print(f"--- Code failed: {status}. Asking AI for a fix... ---")
-            
-        
+
         debug_template = """
         You are an expert Python debugger and friendly tutor.
         A student's code failed.
@@ -155,13 +150,12 @@ def run_code(code_input: CodeInput):
         {error}
 
         Please do the following:
-        1. **Try to infer the student's *intent***. What problem do you think they were trying to solve?
-        2. Based on your guess, explain the bug in a simple, friendly tone.
-        3. Provide the corrected, complete Python code that matches your inferred intent.
+        1. Based on your guess, explain the bug in a simple, friendly tone.
+        2. Provide the corrected, complete Python code that matches your inferred intent.
         """
-        
+
         debug_prompt = ChatPromptTemplate.from_template(debug_template)
-        
+
         debug_chain = (
             debug_prompt
             | llm
@@ -175,26 +169,23 @@ def run_code(code_input: CodeInput):
 
         return {
             "status": status,
-            "stdout": e.stdout if hasattr(e, 'stdout') else "", 
-            "stderr": error_message, 
-            "ai_fix": ai_fix 
+            "stdout": e.stdout if hasattr(e, 'stdout') else "",
+            "stderr": error_message,
+            "ai_fix": ai_fix
         }
-    
-    
+
 
 @app.post("/ask_tutor")
 def ask_tutor(question_input: QuestionInput):
     global vectorstore
-    
+
     if vectorstore is None:
         return {"error": "Knowledge base is not loaded. Did you add files to the 'knowledge_base' folder?"}
-    
 
     question = question_input.question
-    
 
-    
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3}) # k=1 means "get the 1 best page"
+    retriever = vectorstore.as_retriever(
+        search_kwargs={"k": 3})  # k=1 means "get the 1 best page"
 
     retrieved_docs = retriever.invoke(question)
 
@@ -240,16 +231,14 @@ def ask_tutor(question_input: QuestionInput):
     prompt = ChatPromptTemplate.from_template(template)
 
     prompt = ChatPromptTemplate.from_template(template)
-    
+
     chain = (
         {"context": retriever, "question": RunnablePassthrough()}
         | prompt
         | llm
         | StrOutputParser()
     )
-    
+
     answer = chain.invoke(question)
 
-    
-    
     return {"answer": answer}
